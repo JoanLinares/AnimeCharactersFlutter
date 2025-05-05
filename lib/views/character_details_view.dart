@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../controllers/character_viewmodel.dart';
 
 class CharacterDetailsView extends StatelessWidget {
-  const CharacterDetailsView({Key? key}) : super(key: key);
+  const CharacterDetailsView({super.key});
 
   @override
   Widget build(BuildContext context) {

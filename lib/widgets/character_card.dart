@@ -6,10 +6,10 @@ class CharacterCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const CharacterCard({
-    Key? key,
+    super.key,
     required this.character,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext c) {

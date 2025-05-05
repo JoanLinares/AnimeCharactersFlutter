@@ -8,7 +8,7 @@ import '../widgets/afilliation_filter_dropdown.dart';
 import 'character_details_view.dart';
 
 class CharactersView extends StatefulWidget {
-  const CharactersView({Key? key}) : super(key: key);
+  const CharactersView({super.key});
 
   @override
   State<CharactersView> createState() => _CharactersViewState();
