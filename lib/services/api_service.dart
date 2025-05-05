@@ -8,46 +8,78 @@ import '../utils/constants.dart';
 
 class ApiService {
   Future<List<Character>> fetchCharacters() async {
-    final characters = await http.get(Uri.parse(charsEP));
-    if (characters.statusCode == 200) {
-      final data = json.decode(characters.body) as List;
-      return data.map((e) => Character.fromJson(e)).toList();
+    final res = await http.get(Uri.parse(charsEP));
+    if (res.statusCode == 200) {
+      final data = json.decode(res.body) as List;
+      return data
+          .map((e) => Character.fromJson(e as Map<String, dynamic>))
+          .toList();
     }
     throw Exception('Error loading characters');
   }
 
   Future<List<Character>> fetchCharactersByCrew(int crewId) async {
-    final crewsCharacters = await http.get(Uri.parse('$crewById/$crewId'));
-    if (crewsCharacters.statusCode == 200) {
-      final data = json.decode(crewsCharacters.body) as List;
-      return data.map((e) => Character.fromJson(e)).toList();
+    final res = await http.get(Uri.parse('$crewById/$crewId'));
+    if (res.statusCode == 200) {
+      final data = json.decode(res.body) as List;
+      return data
+          .map((e) => Character.fromJson(e as Map<String, dynamic>))
+          .toList();
     }
     throw Exception('Error loading crew #$crewId');
   }
 
   Future<Character> fetchCharacterById(int id) async {
-    final characterID = await http.get(Uri.parse('$charById/$id'));
-    if (characterID.statusCode == 200) {
-      return Character.fromJson(json.decode(characterID.body));
+    final res = await http.get(Uri.parse('$charById/$id'));
+    if (res.statusCode == 200) {
+      return Character.fromJson(json.decode(res.body) as Map<String, dynamic>);
     }
     throw Exception('Error loading character #$id');
   }
 
   Future<List<Crew>> fetchCrews() async {
-    final crews = await http.get(Uri.parse(crewsEP));
-    if (crews.statusCode == 200) {
-      final data = json.decode(crews.body) as List;
-      return data.map((e) => Crew.fromJson(e)).toList();
+    final res = await http.get(Uri.parse(crewsEP));
+    if (res.statusCode == 200) {
+      final data = json.decode(res.body) as List;
+      return data.map((e) => Crew.fromJson(e as Map<String, dynamic>)).toList();
     }
     throw Exception('Error loading crews');
   }
 
   Future<List<Haki>> fetchHakisByCharacter(int id) async {
-    final characterHaki = await http.get(Uri.parse('$hakisByC/$id'));
-    if (characterHaki.statusCode == 200) {
-      final data = json.decode(characterHaki.body) as List;
-      return data.map((e) => Haki.fromJson(e)).toList();
+    final res = await http.get(Uri.parse('$hakisByC/$id'));
+    if (res.statusCode == 200) {
+      final data = json.decode(res.body) as List;
+      return data.map((e) => Haki.fromJson(e as Map<String, dynamic>)).toList();
     }
-    throw Exception('Error loading hakis');
+    throw Exception('Error loading hakis for character #$id');
   }
+
+  Future<DevilFruit> fetchFruitById(int id) async {
+    final res = await http.get(Uri.parse('$fruitsEP/$id'));
+    if (res.statusCode == 200) {
+      return DevilFruit.fromJson(json.decode(res.body) as Map<String, dynamic>);
+    }
+    throw Exception('Error loading fruit #$id');
+  }
+}
+
+Future<String?> fetchCharacterImage(String name) async {
+  final encoded = Uri.encodeComponent(name);
+  final url = Uri.parse(
+    'https://onepiece.fandom.com/api.php'
+    '?action=query'
+    '&titles=$encoded'
+    '&prop=pageimages'
+    '&format=json'
+    '&pithumbsize=300'
+  );
+  final res = await http.get(url);
+  if (res.statusCode != 200) return null;
+
+  final json = jsonDecode(res.body) as Map<String, dynamic>;
+  final pages = (json['query'] as Map)['pages'] as Map<String, dynamic>;
+  final page = pages.values.first as Map<String, dynamic>;
+
+  return (page['thumbnail'] as Map<String, dynamic>?)?['source'] as String?;
 }
