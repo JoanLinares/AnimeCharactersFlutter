@@ -3,27 +3,24 @@ import 'app_colors.dart';
 
 final ThemeData appTheme = ThemeData(
   useMaterial3: true,
-  colorScheme: ColorScheme.light(
+  colorScheme: ColorScheme.dark(
     primary: AppColors.primary,
     secondary: AppColors.accent,
-    surface: AppColors.surface,
-    onSurface: AppColors.textDark,
-    tertiary: AppColors.accent,
-    onPrimary: Colors.white,
+    background: AppColors.background,
+    onBackground: AppColors.text,
+    onPrimary: Colors.black,
   ),
-  scaffoldBackgroundColor: AppColors.surface,
+  scaffoldBackgroundColor: AppColors.background,
   appBarTheme: const AppBarTheme(
     backgroundColor: AppColors.primary,
-    foregroundColor: Colors.white,
+    foregroundColor: Colors.black,
   ),
   textTheme: const TextTheme(
-    titleLarge: TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold),
-    bodyMedium: TextStyle(color: AppColors.textDark),
+    titleLarge: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
+    bodyMedium: TextStyle(color: AppColors.text),
   ),
-  elevatedButtonTheme: ElevatedButtonThemeData(
-    style: ElevatedButton.styleFrom(
-      backgroundColor: AppColors.primary,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-    ),
+  cardTheme: CardTheme(
+    color: Colors.grey[900],
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
   ),
 );

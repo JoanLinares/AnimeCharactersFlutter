@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart' hide SearchBar;
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/character_viewmodel.dart';
+import '../widgets/character_card.dart';
 import '../widgets/loading_indicator.dart';
 import '../widgets/error_dialog.dart';
-import '../widgets/search_bar.dart';
-import '../widgets/crew_filter_dropdown.dart';
-import '../widgets/character_card.dart';
+import '../widgets/afilliation_filter_dropdown.dart';
 import 'character_details_view.dart';
 
 class CharactersView extends StatefulWidget {
-  const CharactersView({super.key});
+  const CharactersView({Key? key}) : super(key: key);
+
   @override
   State<CharactersView> createState() => _CharactersViewState();
 }
@@ -19,8 +19,7 @@ class _CharactersViewState extends State<CharactersView> {
   void initState() {
     super.initState();
     final vm = context.read<CharacterViewModel>();
-    vm.loadInitialData()
-      .catchError((e) => showError(context, e.toString()));
+    vm.loadAll().catchError((e) => showError(context, e.toString()));
   }
 
   @override
@@ -28,16 +27,18 @@ class _CharactersViewState extends State<CharactersView> {
     final vm = context.watch<CharacterViewModel>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('One Piece Explorer')),
+      appBar: AppBar(title: const Text('Dragon Ball Characters')),
       body: LoadingIndicator(
         loading: vm.loading,
         child: Column(
           children: [
-            SearchBar(onChanged: vm.searchByName),
-            CrewFilterDropdown(
-              crews: vm.crews,
-              onSelected: (id) => vm.filterByCrew(id)
-                .catchError((e) => showError(context, e.toString())),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: AffiliationFilterDropdown(
+                affiliations: vm.affiliations,
+                selectedAffiliation: vm.selectedAffiliation,
+                onSelected: vm.filterByAffiliation,
+              ),
             ),
             Expanded(
               child: GridView.builder(
@@ -49,16 +50,19 @@ class _CharactersViewState extends State<CharactersView> {
                   childAspectRatio: 0.65,
                 ),
                 itemCount: vm.filtered.length,
-                itemBuilder: (ctx, i) {
+                itemBuilder: (_, i) {
                   final ch = vm.filtered[i];
                   return CharacterCard(
                     character: ch,
                     onTap: () async {
-                      await vm.loadDetails(ch.id)
-                        .catchError((e) => showError(context, e.toString()));
+                      await vm
+                          .loadDetail(ch.id)
+                          .catchError((e) => showError(context, e.toString()));
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const CharacterDetailsView()),
+                        MaterialPageRoute(
+                          builder: (_) => const CharacterDetailsView(),
+                        ),
                       );
                     },
                   );

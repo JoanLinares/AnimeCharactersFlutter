@@ -1,52 +1,57 @@
 import 'package:flutter/material.dart';
 import '../models/character.dart';
-import '../models/crew.dart';
-import '../models/haki.dart';
 import '../services/api_service.dart';
-import '../utils/network_utils.dart';
 
 class CharacterViewModel extends ChangeNotifier {
   final ApiService _api = ApiService();
 
   bool loading        = false;
-  bool loadingDetails = false;
+  bool loadingDetail  = false;
 
-  List<Crew>      crews     = [];
-  List<Character> allChars  = [];
-  List<Character> filtered  = [];
-  Character?      selected;
-  List<Haki>      hakis     = [];
+  List<Character> characters   = [];
+  List<Character> filtered     = [];
+  List<String>    affiliations = ['All'];
+  String          selectedAffiliation = 'All';
 
-  Future<void> loadInitialData() async {
-    loading = true; notifyListeners();
-    if (!await hasConnection()) throw Exception('No Internet');
-    crews    = await _api.fetchCrews();
-    allChars = await _api.fetchCharacters();
-    filtered = allChars;
-    loading = false; notifyListeners();
-  }
+  Character? selected;
 
-  Future<void> filterByCrew(int crewId) async {
-    loading = true; notifyListeners();
-    if (crewId == 0) {
-      filtered = await _api.fetchCharacters();
-    } else {
-      filtered = await _api.fetchCharactersByCrew(crewId);
-    }
-    loading = false; notifyListeners();
-  }
+  /// Carga todos los personajes y construye la lista de afiliaciones
+  Future<void> loadAll() async {
+    loading = true;
+    notifyListeners();
 
-  void searchByName(String term) {
-    filtered = allChars
-      .where((c) => c.name.toLowerCase().contains(term.toLowerCase()))
-      .toList();
+    characters = await _api.fetchAll();
+    // construye lista única de afiliaciones (incluyendo “All”)
+    affiliations = [
+      'All',
+      ...characters.map((c) => c.affiliation).toSet().where((a) => a.isNotEmpty)
+    ];
+    // inicialmente muestra todos
+    filtered = characters;
+
+    loading = false;
     notifyListeners();
   }
 
-  Future<void> loadDetails(int charId) async {
-    loadingDetails = true; notifyListeners();
-    selected = await _api.fetchCharacterById(charId);
-    hakis    = await _api.fetchHakisByCharacter(charId);
-    loadingDetails = false; notifyListeners();
+  /// Filtra localmente por afiliación
+  void filterByAffiliation(String affiliation) {
+    selectedAffiliation = affiliation;
+    if (affiliation == 'All') {
+      filtered = characters;
+    } else {
+      filtered = characters.where((c) => c.affiliation == affiliation).toList();
+    }
+    notifyListeners();
+  }
+
+  /// Carga detalle de un personaje
+  Future<void> loadDetail(int id) async {
+    loadingDetail = true;
+    notifyListeners();
+
+    selected = await _api.fetchById(id);
+
+    loadingDetail = false;
+    notifyListeners();
   }
 }
