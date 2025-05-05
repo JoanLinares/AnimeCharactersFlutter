@@ -1,46 +1,48 @@
-import 'crew.dart';
-import 'devil_fruit.dart';
+import 'origin_planet.dart';
+import 'transformation.dart';
 
 class Character {
-  final int          id;
-  final String       name;
-  final String       image;
-  final String       size;
-  final String       age;
-  final String       bounty;
-  final String       job;
-  final String       status;
-  final String       description;
-  final Crew         crew;
-  final DevilFruit?  fruit;
+  final int                  id;
+  final String               name;
+  final String               ki;
+  final String               maxKi;
+  final String               race;
+  final String               gender;
+  final String               description;
+  final String               image;
+  final String               affiliation;
+  final OriginPlanet         originPlanet;
+  final List<Transformation> transformations;
 
   Character({
     required this.id,
     required this.name,
-    required this.image,
-    required this.size,
-    required this.age,
-    required this.bounty,
-    required this.job,
-    required this.status,
+    required this.ki,
+    required this.maxKi,
+    required this.race,
+    required this.gender,
     required this.description,
-    required this.crew,
-    this.fruit,
+    required this.image,
+    required this.affiliation,
+    required this.originPlanet,
+    required this.transformations,
   });
 
   factory Character.fromJson(Map<String, dynamic> j) {
     return Character(
-      id:          j['id']         as int?    ?? 0,
-      name:        j['name']       as String? ?? 'Unknown',
-      image:       j['image']      as String? ?? 'https://via.placeholder.com/150',
-      size:        j['size']       as String? ?? '',
-      age:         j['age']        as String? ?? '',
-      bounty:      j['bounty']     as String? ?? '0',
-      job:         j['job']        as String? ?? '',
-      status:      j['status']     as String? ?? '',
-      description: j['description']as String? ?? '',
-      crew:  Crew.fromJson(j['crew']  as Map<String,dynamic>?),
-      fruit: DevilFruit.fromJson(j['fruit'] as Map<String,dynamic>?),
+      id:              j['id']            as int?    ?? 0,
+      name:            j['name']          as String? ?? 'Unknown',
+      ki:              j['ki']            as String? ?? '0',
+      maxKi:           j['maxKi']         as String? ?? '0',
+      race:            j['race']          as String? ?? '',
+      gender:          j['gender']        as String? ?? '',
+      description:     j['description']   as String? ?? '',
+      image:           j['image']         as String? ?? '',
+      affiliation:     j['affiliation']   as String? ?? '',
+      originPlanet:    OriginPlanet.fromJson(j['originPlanet'] as Map<String, dynamic>?),
+      transformations: (j['transformations'] as List<dynamic>?)
+                          ?.map((e) => Transformation.fromJson(e as Map<String, dynamic>))
+                          .toList() ?? <Transformation>[],
     );
   }
 }
