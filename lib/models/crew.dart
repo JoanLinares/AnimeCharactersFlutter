@@ -4,8 +4,12 @@ class Crew {
 
   Crew({required this.id, required this.name});
 
-  factory Crew.fromJson(Map<String, dynamic> j) => Crew(
-    id:   j['id'],
-    name: j['name'],
-  );
+  /// Acepta json nulo y da valores por defecto
+  factory Crew.fromJson(Map<String, dynamic>? j) {
+    if (j == null) return Crew(id: 0, name: 'Unknown');
+    return Crew(
+      id:   j['id']   as int?    ?? 0,
+      name: j['name'] as String? ?? 'Unknown',
+    );
+  }
 }
