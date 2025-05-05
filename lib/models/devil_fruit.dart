@@ -13,11 +13,22 @@ class DevilFruit {
     required this.filename,
   });
 
-  factory DevilFruit.fromJson(Map<String, dynamic> j) => DevilFruit(
-    id:          j['id'],
-    name:        j['name'],
-    type:        j['type'],
-    description: j['description'],
-    filename:    j['filename'],
-  );
+  factory DevilFruit.fromJson(Map<String, dynamic>? j) {
+    if (j == null) {
+      return DevilFruit(
+        id: 0,
+        name: 'None',
+        type: '',
+        description: '',
+        filename: 'https://via.placeholder.com/150',
+      );
+    }
+    return DevilFruit(
+      id:          j['id']          as int?    ?? 0,
+      name:        j['name']        as String? ?? 'Unknown',
+      type:        j['type']        as String? ?? '',
+      description: j['description'] as String? ?? '',
+      filename:    j['filename']    as String? ?? '',
+    );
+  }
 }
