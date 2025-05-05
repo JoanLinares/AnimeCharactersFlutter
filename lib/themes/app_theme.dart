@@ -6,11 +6,11 @@ final ThemeData appTheme = ThemeData(
   colorScheme: ColorScheme.dark(
     primary: AppColors.primary,
     secondary: AppColors.accent,
-    background: AppColors.background,
-    onBackground: AppColors.text,
+    surface: AppColors.surface,
+    onSurface: AppColors.text,
     onPrimary: Colors.black,
   ),
-  scaffoldBackgroundColor: AppColors.background,
+  scaffoldBackgroundColor: AppColors.surface,
   appBarTheme: const AppBarTheme(
     backgroundColor: AppColors.primary,
     foregroundColor: Colors.black,
