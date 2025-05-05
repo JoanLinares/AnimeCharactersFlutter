@@ -2,38 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/character_viewmodel.dart';
 
-class CharacterDetailsView extends StatefulWidget {
+class CharacterDetailsView extends StatelessWidget {
   const CharacterDetailsView({Key? key}) : super(key: key);
-
-  @override
-  State<CharacterDetailsView> createState() => _CharacterDetailsViewState();
-}
-
-class _CharacterDetailsViewState extends State<CharacterDetailsView>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _animCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-  }
-
-  @override
-  void dispose() {
-    _animCtrl.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<CharacterViewModel>();
     final ch = vm.selected;
 
-    if (ch == null || vm.loadingDetails) {
+    if (ch == null || vm.loadingDetail) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
@@ -46,75 +23,69 @@ class _CharacterDetailsViewState extends State<CharacterDetailsView>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Card base
-            Card(
-              clipBehavior: Clip.antiAlias,
-              shape:
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Column(
-                children: [
-                  Image.network(
-                    ch.image,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.error),
-                  ),
-                  ListTile(
-                    title: Text(ch.name,
-                        style: Theme.of(context).textTheme.titleLarge),
-                    subtitle: Text('Job: ${ch.job}\nStatus: ${ch.status}'),
-                  ),
-                ],
-              ),
-            ),
-
+            // Imagen principal
+            Image.network(ch.image, height: 200, fit: BoxFit.cover),
             const SizedBox(height: 16),
 
-            // Historia (placeholder si no tienes endpoint específico)
-            Text('Historia',
-                style: Theme.of(context).textTheme.titleLarge),
+            // Datos básicos
+            Text('Name: ${ch.name}', style: Theme.of(context).textTheme.titleLarge),
+            Text('Affiliation: ${ch.affiliation}',
+                style: Theme.of(context).textTheme.bodyMedium),
+            Text('Race: ${ch.race}', style: Theme.of(context).textTheme.bodyMedium),
+            Text('Gender: ${ch.gender}', style: Theme.of(context).textTheme.bodyMedium),
+            Text('Ki: ${ch.ki}/${ch.maxKi}',
+                style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 16),
+
+            // Descripción
+            Text('Description', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
-              ch.description.isNotEmpty
-                  ? ch.description
-                  : 'No hay información de historia disponible.',
+              ch.description.isNotEmpty ? ch.description : 'No description available.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-
             const SizedBox(height: 16),
 
-            // Devil Fruit
-            if (ch.fruit != null)
-              ExpansionTile(
-                leading: Image.network(
-                  ch.fruit!.filename,
-                  width: 32,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.error),
+            // Planeta de origen
+            ExpansionTile(
+              leading: ch.originPlanet.image.isNotEmpty
+                  ? Image.network(
+                      ch.originPlanet.image,
+                      width: 32,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.public),
+                    )
+                  : const Icon(Icons.public),
+              title: Text('Origin: ${ch.originPlanet.name}'),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Text(ch.originPlanet.description),
                 ),
-                title: Text('Devil Fruit: ${ch.fruit!.name}'),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Text(ch.fruit!.description),
-                  ),
-                  ListTile(
-                    title: const Text('Type'),
-                    subtitle: Text(ch.fruit!.type),
-                  ),
-                ],
-              ),
-
+                ListTile(
+                  title: Text(
+                      'Destroyed: ${ch.originPlanet.isDestroyed ? "Yes" : "No"}'),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
 
-            // Haki
+            // Transformaciones
             ExpansionTile(
-              leading: const Icon(Icons.flash_on),
-              title: const Text('Hakis'),
-              children: vm.hakis
-                  .map((h) => ListTile(
-                        title: Text(h.name),
-                        subtitle: Text('Type: ${h.type}'),
-                      ))
-                  .toList(),
+              leading: const Icon(Icons.transform),
+              title: const Text('Transformations'),
+              children: ch.transformations.map((t) {
+                return ListTile(
+                  leading: t.image.isNotEmpty
+                      ? Image.network(
+                          t.image,
+                          width: 32,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.error),
+                        )
+                      : const Icon(Icons.error),
+                  title: Text(t.name),
+                  subtitle: Text('Ki: ${t.ki}'),
+                );
+              }).toList(),
             ),
           ],
         ),
