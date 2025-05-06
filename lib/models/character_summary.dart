@@ -14,7 +14,6 @@ class CharacterSummary {
     final jpg  = c['images']['jpg']  as Map<String, dynamic>;
     final webp = c['images']['webp'] as Map<String, dynamic>;
 
-    // Usa la URL de webp de alta resolución, no la "small"
     final url = (webp['image_url'] as String?) ?? (jpg['image_url'] as String);
 
     return CharacterSummary(
