@@ -8,11 +8,11 @@ class SeriesFilterDropdown extends StatelessWidget {
   final ValueChanged<int> onSelected;
 
   const SeriesFilterDropdown({
-    Key? key,
+    super.key,
     required this.seriesList,
     required this.selectedSeriesId,
     required this.onSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

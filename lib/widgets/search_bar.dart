@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class SearchBar extends StatelessWidget {
   final ValueChanged<String> onChanged;
-  const SearchBar({Key? key, required this.onChanged}) : super(key: key);
+  const SearchBar({super.key, required this.onChanged});
 
   @override
   Widget build(BuildContext c) => Padding(

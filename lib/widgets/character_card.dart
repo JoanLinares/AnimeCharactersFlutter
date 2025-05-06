@@ -7,10 +7,10 @@ class CharacterCard extends StatelessWidget {
   final VoidCallback    onTap;
 
   const CharacterCard({
-    Key? key,
+    super.key,
     required this.character,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext c) {
@@ -22,7 +22,6 @@ class CharacterCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Fija un alto para que la grid reserve ese espacio
             SizedBox(
               height: 100,
               child: CachedNetworkImage(
