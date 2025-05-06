@@ -26,7 +26,7 @@ class CharacterViewModel extends ChangeNotifier {
   CharacterDetail? selectedDetail;
   String          errorMessage     = '';
 
-  /// Load up to 50 from each of Naruto, OP, DBZ when id==0; otherwise only that series.
+  /// 50 characters for serie
   Future<void> loadSeries(int animeId) async {
     loading = true;
     notifyListeners();
@@ -54,7 +54,6 @@ class CharacterViewModel extends ChangeNotifier {
     }
   }
 
-  /// Filter current `filtered` by name
   void searchByName(String term) {
     _searchTerm = term.toLowerCase();
     filtered = characters.where((c) {
@@ -63,7 +62,6 @@ class CharacterViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Load detail for one character
   Future<void> loadDetail(int charId) async {
     loadingDetail = true;
     notifyListeners();
@@ -78,7 +76,6 @@ class CharacterViewModel extends ChangeNotifier {
     }
   }
 
-  /// Exposed helper for dropdown
   Future<void> selectSeries(int animeId) => loadSeries(animeId);
 
   String get seriesTitle =>
