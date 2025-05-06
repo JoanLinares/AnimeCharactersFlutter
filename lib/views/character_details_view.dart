@@ -1,92 +1,140 @@
+// lib/views/character_details_view.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../controllers/character_viewmodel.dart';
 
-class CharacterDetailsView extends StatelessWidget {
-  const CharacterDetailsView({super.key});
+class CharacterDetailsView extends StatefulWidget {
+  const CharacterDetailsView({Key? key}) : super(key: key);
+
+  @override
+  State<CharacterDetailsView> createState() => _CharacterDetailsViewState();
+}
+
+class _CharacterDetailsViewState extends State<CharacterDetailsView>
+    with SingleTickerProviderStateMixin {
+  bool _showDescription = false;
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<CharacterViewModel>();
-    final ch = vm.selected;
-
-    if (ch == null || vm.loadingDetail) {
+    final d  = vm.selectedDetail;
+    if (d == null || vm.loadingDetail) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
+    // Only the first paragraph
+    final firstParagraph = d.about.split(RegExp(r'\r?\n\r?\n')).first;
+
     return Scaffold(
-      appBar: AppBar(title: Text(ch.name)),
+      appBar: AppBar(title: Text(vm.seriesTitle)),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Imagen principal
-            Image.network(ch.image, height: 200, fit: BoxFit.cover),
             const SizedBox(height: 16),
-
-            // Datos básicos
-            Text('Name: ${ch.name}', style: Theme.of(context).textTheme.titleLarge),
-            Text('Affiliation: ${ch.affiliation}',
-                style: Theme.of(context).textTheme.bodyMedium),
-            Text('Race: ${ch.race}', style: Theme.of(context).textTheme.bodyMedium),
-            Text('Gender: ${ch.gender}', style: Theme.of(context).textTheme.bodyMedium),
-            Text('Ki: ${ch.ki}/${ch.maxKi}',
-                style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 16),
-
-            // Descripción
-            Text('Description', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text(
-              ch.description.isNotEmpty ? ch.description : 'No description available.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-
-            // Planeta de origen
-            ExpansionTile(
-              leading: ch.originPlanet.image.isNotEmpty
-                  ? Image.network(
-                      ch.originPlanet.image,
-                      width: 32,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.public),
-                    )
-                  : const Icon(Icons.public),
-              title: Text('Origin: ${ch.originPlanet.name}'),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Text(ch.originPlanet.description),
+            // Image
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: CachedNetworkImage(
+                  imageUrl: d.imageUrl,
+                  height: 260,
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) => const SizedBox(
+                    height: 260,
+                    child: Center(child: CircularProgressIndicator())),
+                  errorWidget: (_, __, ___) =>
+                      const Icon(Icons.error, size: 80),
                 ),
-                ListTile(
-                  title: Text(
-                      'Destroyed: ${ch.originPlanet.isDestroyed ? "Yes" : "No"}'),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Name
+            Center(
+              child: Text(
+                d.name,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.1,
+                    ),
+              ),
+            ),
+            if (d.nameKanji.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Center(
+                child: Text(
+                  d.nameKanji,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontStyle: FontStyle.italic,
+                        color: Colors.grey[600],
+                      ),
                 ),
-              ],
+              ),
+            ],
+            const SizedBox(height: 12),
+            // Favorites
+            Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.favorite, color: Colors.red),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${d.favorites}',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-
-            // Transformaciones
-            ExpansionTile(
-              leading: const Icon(Icons.transform),
-              title: const Text('Transformations'),
-              children: ch.transformations.map((t) {
-                return ListTile(
-                  leading: t.image.isNotEmpty
-                      ? Image.network(
-                          t.image,
-                          width: 32,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.error),
-                        )
-                      : const Icon(Icons.error),
-                  title: Text(t.name),
-                  subtitle: Text('Ki: ${t.ki}'),
-                );
-              }).toList(),
+            const SizedBox(height: 24),
+            // Description toggle
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: GestureDetector(
+                onTap: () => setState(() => _showDescription = !_showDescription),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Description',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    Icon(
+                      _showDescription
+                          ? Icons.expand_less
+                          : Icons.expand_more,
+                    ),
+                  ],
+                ),
+              ),
             ),
+            // Animated reveal
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: Text(
+                  firstParagraph,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        height: 1.4,
+                      ),
+                  textAlign: TextAlign.justify,
+                ),
+              ),
+              crossFadeState: _showDescription
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 300),
+            ),
+            const SizedBox(height: 24),
           ],
         ),
       ),

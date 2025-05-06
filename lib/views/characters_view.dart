@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/character_viewmodel.dart';
-import '../widgets/character_card.dart';
+import '../widgets/search_bar.dart' as custom_widgets;
 import '../widgets/loading_indicator.dart';
+import '../widgets/series_filter_dropdown.dart';
+import '../widgets/character_card.dart';
 import '../widgets/error_dialog.dart';
-import '../widgets/afilliation_filter_dropdown.dart';
 import 'character_details_view.dart';
 
 class CharactersView extends StatefulWidget {
-  const CharactersView({super.key});
+  const CharactersView({Key? key}) : super(key: key);
 
   @override
   State<CharactersView> createState() => _CharactersViewState();
@@ -18,8 +19,10 @@ class _CharactersViewState extends State<CharactersView> {
   @override
   void initState() {
     super.initState();
+    // start with "All"
     final vm = context.read<CharacterViewModel>();
-    vm.loadAll().catchError((e) => showError(context, e.toString()));
+    vm.loadSeries(vm.selectedSeriesId)
+      .catchError((e) => showError(context, e.toString()));
   }
 
   @override
@@ -27,27 +30,37 @@ class _CharactersViewState extends State<CharactersView> {
     final vm = context.watch<CharacterViewModel>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Dragon Ball Characters')),
-      body: LoadingIndicator(
-        loading: vm.loading,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: AffiliationFilterDropdown(
-                affiliations: vm.affiliations,
-                selectedAffiliation: vm.selectedAffiliation,
-                onSelected: vm.filterByAffiliation,
-              ),
+      appBar: AppBar(title: Text(vm.seriesTitle)),
+      body: Column(
+        children: [
+          // 1) Search by name
+          custom_widgets.SearchBar(onChanged: vm.searchByName),
+
+          // 2) Series filter
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: SeriesFilterDropdown(
+              seriesList: vm.seriesList,
+              selectedSeriesId: vm.selectedSeriesId,
+              onSelected: (newId) {
+                vm.selectSeries(newId)
+                  .catchError((e) => showError(context, e.toString()));
+              },
             ),
-            Expanded(
+          ),
+
+          // 3) Grid or loading
+          Expanded(
+            child: LoadingIndicator(
+              loading: vm.loading,
               child: GridView.builder(
                 padding: const EdgeInsets.all(8),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
-                  childAspectRatio: 0.65,
+                  childAspectRatio: 0.7,
                 ),
                 itemCount: vm.filtered.length,
                 itemBuilder: (_, i) {
@@ -55,22 +68,23 @@ class _CharactersViewState extends State<CharactersView> {
                   return CharacterCard(
                     character: ch,
                     onTap: () async {
-                      await vm
-                          .loadDetail(ch.id)
+                      await vm.loadDetail(ch.id)
                           .catchError((e) => showError(context, e.toString()));
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CharacterDetailsView(),
-                        ),
-                      );
+                      if (mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CharacterDetailsView(),
+                          ),
+                        );
+                      }
                     },
                   );
                 },
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
