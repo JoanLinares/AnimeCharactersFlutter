@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext c) => MaterialApp(
-    title: 'One Piece Explorer',
+    title: 'Anime Characters Explorer',
     theme: appTheme,
     home: const CharactersView(),
   );

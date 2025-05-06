@@ -1,3 +1,4 @@
-const String _baseEP = 'https://dragonball-api.com/api';
-const String charsEP = '$_baseEP/characters';
-const String charByIdEP = '$_baseEP/characters';   // + '/{id}'
+const String baseURL             = 'https://api.jikan.moe/v4';
+const String animeCharactersEP   = '$baseURL/anime';       // /anime/{id}/characters
+const String characterDetailEP   = '$baseURL/characters';  // /characters/{id}
+const String animeDetailEP       = '$baseURL/anime';       // /anime/{id}

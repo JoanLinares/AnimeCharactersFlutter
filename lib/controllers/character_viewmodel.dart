@@ -1,57 +1,83 @@
 import 'package:flutter/material.dart';
-import '../models/character.dart';
+import '../models/series.dart';
+import '../models/character_summary.dart';
+import '../models/character_detail.dart';
 import '../services/api_service.dart';
 
 class CharacterViewModel extends ChangeNotifier {
   final ApiService _api = ApiService();
 
-  bool loading        = false;
-  bool loadingDetail  = false;
+  bool loading       = false;
+  bool loadingDetail = false;
 
-  List<Character> characters   = [];
-  List<Character> filtered     = [];
-  List<String>    affiliations = ['All'];
-  String          selectedAffiliation = 'All';
+  /// 0 = All, 20 = Naruto, 21 = One Piece, 813 = Dragon Ball Z
+  final List<Series> seriesList = [
+    Series(id: 0,   name: 'All'),
+    Series(id: 20,  name: 'Naruto'),
+    Series(id: 21,  name: 'One Piece'),
+    Series(id: 813, name: 'Dragon Ball Z'),
+  ];
+  int    selectedSeriesId = 0;
 
-  Character? selected;
+  String _searchTerm               = '';
+  List<CharacterSummary> characters = [];
+  List<CharacterSummary> filtered   = [];
 
-  /// Carga todos los personajes y construye la lista de afiliaciones
-  Future<void> loadAll() async {
+  CharacterDetail? selectedDetail;
+  String          errorMessage     = '';
+
+  /// 50 characters for serie
+  Future<void> loadSeries(int animeId) async {
     loading = true;
     notifyListeners();
 
-    characters = await _api.fetchAll();
-    // construye lista única de afiliaciones (incluyendo “All”)
-    affiliations = [
-      'All',
-      ...characters.map((c) => c.affiliation).toSet().where((a) => a.isNotEmpty)
-    ];
-    // inicialmente muestra todos
-    filtered = characters;
+    try {
+      selectedSeriesId = animeId;
+      characters.clear();
 
-    loading = false;
-    notifyListeners();
-  }
+      final targetIds = animeId == 0
+        ? [20, 21, 813]
+        : [animeId];
 
-  /// Filtra localmente por afiliación
-  void filterByAffiliation(String affiliation) {
-    selectedAffiliation = affiliation;
-    if (affiliation == 'All') {
+      for (var id in targetIds) {
+        final list = await _api.fetchCharactersBySeries(id);
+        characters.addAll(list.take(50));
+      }
+
+      // initial filtered = all
       filtered = characters;
-    } else {
-      filtered = characters.where((c) => c.affiliation == affiliation).toList();
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      loading = false;
+      notifyListeners();
     }
+  }
+
+  void searchByName(String term) {
+    _searchTerm = term.toLowerCase();
+    filtered = characters.where((c) {
+      return c.name.toLowerCase().contains(_searchTerm);
+    }).toList();
     notifyListeners();
   }
 
-  /// Carga detalle de un personaje
-  Future<void> loadDetail(int id) async {
+  Future<void> loadDetail(int charId) async {
     loadingDetail = true;
     notifyListeners();
 
-    selected = await _api.fetchById(id);
-
-    loadingDetail = false;
-    notifyListeners();
+    try {
+      selectedDetail = await _api.fetchCharacterDetail(charId);
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      loadingDetail = false;
+      notifyListeners();
+    }
   }
+
+  Future<void> selectSeries(int animeId) => loadSeries(animeId);
+
+  String get seriesTitle =>
+    seriesList.firstWhere((s) => s.id == selectedSeriesId).name;
 }

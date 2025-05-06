@@ -2,90 +2,135 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/character_viewmodel.dart';
 
-class CharacterDetailsView extends StatelessWidget {
-  const CharacterDetailsView({Key? key}) : super(key: key);
+class CharacterDetailsView extends StatefulWidget {
+  final String characterId;
+
+  const CharacterDetailsView({super.key, required this.characterId});
+
+  @override
+  State<CharacterDetailsView> createState() => _CharacterDetailsViewState();
+}
+
+class _CharacterDetailsViewState extends State<CharacterDetailsView>
+    with SingleTickerProviderStateMixin {
+  bool _showDetails = false;
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<CharacterViewModel>();
-    final ch = vm.selected;
-
-    if (ch == null || vm.loadingDetail) {
+    final d  = vm.selectedDetail;
+    if (d == null || vm.loadingDetail) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
+    // Solo la primera sección de metadata
+    final metadataSection = d.about.split(RegExp(r'\r?\n\r?\n')).first;
+    final lines = metadataSection.split(RegExp(r'\r?\n'));
+
     return Scaffold(
-      appBar: AppBar(title: Text(ch.name)),
+      appBar: AppBar(
+        // Título fijo de la pantalla de detalle
+        title: const Text('Character Details'),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Imagen principal
-            Image.network(ch.image, height: 200, fit: BoxFit.cover),
-            const SizedBox(height: 16),
+            Hero(
+              tag: 'char_image_${d.id}',
+              child: Image.network(
+                d.imageUrl,
+                fit: BoxFit.contain,
+                loadingBuilder: (ctx, child, prog) {
+                  if (prog == null) return child;
+                  return const SizedBox(
+                    height: 200,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                },
+                errorBuilder: (ctx, err, st) =>
+                    const Icon(Icons.error, size: 80),
+              ),
+            ),
+            const SizedBox(height: 20),
 
-            // Datos básicos
-            Text('Name: ${ch.name}', style: Theme.of(context).textTheme.titleLarge),
-            Text('Affiliation: ${ch.affiliation}',
-                style: Theme.of(context).textTheme.bodyMedium),
-            Text('Race: ${ch.race}', style: Theme.of(context).textTheme.bodyMedium),
-            Text('Gender: ${ch.gender}', style: Theme.of(context).textTheme.bodyMedium),
-            Text('Ki: ${ch.ki}/${ch.maxKi}',
-                style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 16),
-
-            // Descripción
-            Text('Description', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
+            // Nombre del personaje
             Text(
-              ch.description.isNotEmpty ? ch.description : 'No description available.',
-              style: Theme.of(context).textTheme.bodyMedium,
+              d.name,
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
-            // Planeta de origen
-            ExpansionTile(
-              leading: ch.originPlanet.image.isNotEmpty
-                  ? Image.network(
-                      ch.originPlanet.image,
-                      width: 32,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.public),
-                    )
-                  : const Icon(Icons.public),
-              title: Text('Origin: ${ch.originPlanet.name}'),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Text(ch.originPlanet.description),
+            // Sección Details (desplegable)
+            Material(
+              color: Colors.grey[850],
+              borderRadius: BorderRadius.circular(8),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => setState(() => _showDetails = !_showDetails),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 12, horizontal: 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Details',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(color: Colors.white),
+                        ),
+                      ),
+                      Icon(
+                        _showDetails
+                            ? Icons.expand_less
+                            : Icons.expand_more,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
                 ),
-                ListTile(
-                  title: Text(
-                      'Destroyed: ${ch.originPlanet.isDestroyed ? "Yes" : "No"}'),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: 8),
 
-            // Transformaciones
-            ExpansionTile(
-              leading: const Icon(Icons.transform),
-              title: const Text('Transformations'),
-              children: ch.transformations.map((t) {
-                return ListTile(
-                  leading: t.image.isNotEmpty
-                      ? Image.network(
-                          t.image,
-                          width: 32,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.error),
-                        )
-                      : const Icon(Icons.error),
-                  title: Text(t.name),
-                  subtitle: Text('Ki: ${t.ki}'),
-                );
-              }).toList(),
+            // Solo mostramos el bloque metadata definido
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[900],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 12, horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: lines.map((line) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          line,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(color: Colors.white),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              crossFadeState: _showDetails
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 300),
             ),
           ],
         ),

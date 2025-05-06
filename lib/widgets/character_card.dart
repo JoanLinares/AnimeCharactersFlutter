@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import '../models/character.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../models/character_summary.dart';
 
 class CharacterCard extends StatelessWidget {
-  final Character character;
-  final VoidCallback onTap;
+  final CharacterSummary character;
+  final VoidCallback    onTap;
 
   const CharacterCard({
-    Key? key,
+    super.key,
     required this.character,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext c) {
@@ -21,33 +22,28 @@ class CharacterCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: Image.network(
-                character.image,
+            SizedBox(
+              height: 100,
+              child: CachedNetworkImage(
+                imageUrl: character.imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(Icons.error),
+                width: double.infinity,
+                placeholder: (_, __) =>
+                    const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                errorWidget: (_, __, ___) =>
+                    const Center(child: Icon(Icons.error)),
               ),
             ),
+
+            // Nombre
             Padding(
               padding: const EdgeInsets.all(8),
-              child: Column(
-                children: [
-                  Text(
-                    character.name,
-                    style: Theme.of(c).textTheme.titleLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Affiliation: ${character.affiliation}',
-                    style: Theme.of(c).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Ki: ${character.ki}/${character.maxKi}',
-                    style: Theme.of(c).textTheme.bodyMedium,
-                  ),
-                ],
+              child: Text(
+                character.name,
+                style: Theme.of(c).textTheme.titleMedium,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
