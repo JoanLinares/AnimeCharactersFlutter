@@ -1,12 +1,11 @@
-// lib/views/character_details_view.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../controllers/character_viewmodel.dart';
 
 class CharacterDetailsView extends StatefulWidget {
-  const CharacterDetailsView({Key? key}) : super(key: key);
+  final String characterId;
+
+  const CharacterDetailsView({super.key, required this.characterId});
 
   @override
   State<CharacterDetailsView> createState() => _CharacterDetailsViewState();
@@ -14,7 +13,7 @@ class CharacterDetailsView extends StatefulWidget {
 
 class _CharacterDetailsViewState extends State<CharacterDetailsView>
     with SingleTickerProviderStateMixin {
-  bool _showDescription = false;
+  bool _showDetails = false;
 
   @override
   Widget build(BuildContext context) {
@@ -26,115 +25,113 @@ class _CharacterDetailsViewState extends State<CharacterDetailsView>
       );
     }
 
-    // Only the first paragraph
-    final firstParagraph = d.about.split(RegExp(r'\r?\n\r?\n')).first;
+    // Solo la primera sección de metadata
+    final metadataSection = d.about.split(RegExp(r'\r?\n\r?\n')).first;
+    final lines = metadataSection.split(RegExp(r'\r?\n'));
 
     return Scaffold(
-      appBar: AppBar(title: Text(vm.seriesTitle)),
+      appBar: AppBar(
+        // Título fijo de la pantalla de detalle
+        title: const Text('Character Details'),
+      ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         child: Column(
           children: [
-            const SizedBox(height: 16),
-            // Image
-            Center(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(
-                  imageUrl: d.imageUrl,
-                  height: 260,
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  fit: BoxFit.cover,
-                  placeholder: (_, __) => const SizedBox(
-                    height: 260,
-                    child: Center(child: CircularProgressIndicator())),
-                  errorWidget: (_, __, ___) =>
-                      const Icon(Icons.error, size: 80),
-                ),
+            Hero(
+              tag: 'char_image_${d.id}',
+              child: Image.network(
+                d.imageUrl,
+                fit: BoxFit.contain,
+                loadingBuilder: (ctx, child, prog) {
+                  if (prog == null) return child;
+                  return const SizedBox(
+                    height: 200,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                },
+                errorBuilder: (ctx, err, st) =>
+                    const Icon(Icons.error, size: 80),
               ),
             ),
             const SizedBox(height: 20),
-            // Name
-            Center(
-              child: Text(
-                d.name,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.1,
-                    ),
-              ),
-            ),
-            if (d.nameKanji.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Center(
-                child: Text(
-                  d.nameKanji,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontStyle: FontStyle.italic,
-                        color: Colors.grey[600],
-                      ),
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-            // Favorites
-            Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.favorite, color: Colors.red),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${d.favorites}',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                ],
-              ),
+
+            // Nombre del personaje
+            Text(
+              d.name,
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 24),
-            // Description toggle
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: GestureDetector(
-                onTap: () => setState(() => _showDescription = !_showDescription),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Description',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    Icon(
-                      _showDescription
-                          ? Icons.expand_less
-                          : Icons.expand_more,
-                    ),
-                  ],
+
+            // Sección Details (desplegable)
+            Material(
+              color: Colors.grey[850],
+              borderRadius: BorderRadius.circular(8),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => setState(() => _showDetails = !_showDetails),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 12, horizontal: 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Details',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(color: Colors.white),
+                        ),
+                      ),
+                      Icon(
+                        _showDetails
+                            ? Icons.expand_less
+                            : Icons.expand_more,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-            // Animated reveal
+
+            // Solo mostramos el bloque metadata definido
             AnimatedCrossFade(
               firstChild: const SizedBox.shrink(),
               secondChild: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                child: Text(
-                  firstParagraph,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        height: 1.4,
-                      ),
-                  textAlign: TextAlign.justify,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[900],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 12, horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: lines.map((line) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          line,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(color: Colors.white),
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
-              crossFadeState: _showDescription
+              crossFadeState: _showDetails
                   ? CrossFadeState.showSecond
                   : CrossFadeState.showFirst,
               duration: const Duration(milliseconds: 300),
             ),
-            const SizedBox(height: 24),
           ],
         ),
       ),
