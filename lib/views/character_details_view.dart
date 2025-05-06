@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
 import '../controllers/character_viewmodel.dart';
 
 class CharacterDetailsView extends StatefulWidget {
   final String characterId;
 
-  const CharacterDetailsView({super.key, required this.characterId});
+  const CharacterDetailsView({Key? key, required this.characterId})
+      : super(key: key);
 
   @override
   State<CharacterDetailsView> createState() => _CharacterDetailsViewState();
@@ -17,21 +20,24 @@ class _CharacterDetailsViewState extends State<CharacterDetailsView>
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<CharacterViewModel>();
-    final d  = vm.selectedDetail;
-    if (d == null || vm.loadingDetail) {
+    final vm     = context.watch<CharacterViewModel>();
+    final detail = vm.selectedDetail;
+
+    if (detail == null || vm.loadingDetail) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     // Solo la primera sección de metadata
-    final metadataSection = d.about.split(RegExp(r'\r?\n\r?\n')).first;
-    final lines = metadataSection.split(RegExp(r'\r?\n'));
+    final metadataSection = detail.about.split(RegExp(r'\r?\n\r?\n')).first;
+    final lines = metadataSection
+        .split(RegExp(r'\r?\n'))
+        .where((l) => l.trim().isNotEmpty)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
-        // Título fijo de la pantalla de detalle
         title: const Text('Character Details'),
       ),
       body: SingleChildScrollView(
@@ -39,26 +45,26 @@ class _CharacterDetailsViewState extends State<CharacterDetailsView>
         child: Column(
           children: [
             Hero(
-              tag: 'char_image_${d.id}',
-              child: Image.network(
-                d.imageUrl,
+              tag: 'char_image_${detail.id}',
+              child: CachedNetworkImage(
+                imageUrl: detail.imageUrl,
                 fit: BoxFit.contain,
-                loadingBuilder: (ctx, child, prog) {
-                  if (prog == null) return child;
-                  return const SizedBox(
-                    height: 200,
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                },
-                errorBuilder: (ctx, err, st) =>
-                    const Icon(Icons.error, size: 80),
+                placeholder: (_, __) => const SizedBox(
+                  height: 200,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (_, __, ___) =>
+                    const SizedBox(
+                      height: 200,
+                      child: Center(child: Icon(Icons.error, size: 80)),
+                    ),
               ),
             ),
             const SizedBox(height: 20),
 
             // Nombre del personaje
             Text(
-              d.name,
+              detail.name,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 24),
@@ -72,7 +78,9 @@ class _CharacterDetailsViewState extends State<CharacterDetailsView>
                 onTap: () => setState(() => _showDetails = !_showDetails),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      vertical: 12, horizontal: 16),
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
                   child: Row(
                     children: [
                       Expanded(
@@ -100,8 +108,10 @@ class _CharacterDetailsViewState extends State<CharacterDetailsView>
             AnimatedCrossFade(
               firstChild: const SizedBox.shrink(),
               secondChild: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 12,
+                ),
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -109,7 +119,9 @@ class _CharacterDetailsViewState extends State<CharacterDetailsView>
                     borderRadius: BorderRadius.circular(8),
                   ),
                   padding: const EdgeInsets.symmetric(
-                      vertical: 12, horizontal: 16),
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: lines.map((line) {
