@@ -9,7 +9,7 @@ import '../widgets/error_dialog.dart';
 import 'character_details_view.dart';
 
 class CharactersView extends StatefulWidget {
-  const CharactersView({Key? key}) : super(key: key);
+  const CharactersView({super.key});
 
   @override
   State<CharactersView> createState() => _CharactersViewState();
@@ -19,7 +19,6 @@ class _CharactersViewState extends State<CharactersView> {
   @override
   void initState() {
     super.initState();
-    // start with "All"
     final vm = context.read<CharacterViewModel>();
     vm.loadSeries(vm.selectedSeriesId)
       .catchError((e) => showError(context, e.toString()));
@@ -30,13 +29,15 @@ class _CharactersViewState extends State<CharactersView> {
     final vm = context.watch<CharacterViewModel>();
 
     return Scaffold(
-      appBar: AppBar(title: Text(vm.seriesTitle)),
+      appBar: AppBar(
+        title: const Text('Anime Characters Explorer'),
+      ),
       body: Column(
         children: [
-          // 1) Search by name
+          // Searcher
           custom_widgets.SearchBar(onChanged: vm.searchByName),
 
-          // 2) Series filter
+          // Series selector
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: SeriesFilterDropdown(
@@ -49,7 +50,7 @@ class _CharactersViewState extends State<CharactersView> {
             ),
           ),
 
-          // 3) Grid or loading
+          // Grid or loading
           Expanded(
             child: LoadingIndicator(
               loading: vm.loading,
@@ -69,12 +70,12 @@ class _CharactersViewState extends State<CharactersView> {
                     character: ch,
                     onTap: () async {
                       await vm.loadDetail(ch.id)
-                          .catchError((e) => showError(context, e.toString()));
+                        .catchError((e) => showError(context, e.toString()));
                       if (mounted) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const CharacterDetailsView(),
+                            builder: (_) => CharacterDetailsView(characterId: ch.id.toString()),
                           ),
                         );
                       }
