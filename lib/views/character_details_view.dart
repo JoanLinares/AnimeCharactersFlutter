@@ -7,8 +7,7 @@ import '../controllers/character_viewmodel.dart';
 class CharacterDetailsView extends StatefulWidget {
   final String characterId;
 
-  const CharacterDetailsView({Key? key, required this.characterId})
-      : super(key: key);
+  const CharacterDetailsView({super.key, required this.characterId});
 
   @override
   State<CharacterDetailsView> createState() => _CharacterDetailsViewState();
