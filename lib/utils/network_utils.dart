@@ -1,6 +1,11 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 Future<bool> hasConnection() async {
-  final c = await Connectivity().checkConnectivity();
-  return !c.contains(ConnectivityResult.none) && c.isNotEmpty;
+  try {
+    final result = await Connectivity().checkConnectivity();
+    return !result.contains(ConnectivityResult.none) && result.isNotEmpty;
+  } catch (e) {
+    // Handle exceptions
+    return false;
+  }
 }

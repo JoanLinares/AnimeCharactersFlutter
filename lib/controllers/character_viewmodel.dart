@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-
 import '../models/series.dart';
 import '../models/character_summary.dart';
 import '../models/character_detail.dart';
 import '../services/api_service.dart';
+import '../utils/network_utils.dart';
 
 class CharacterViewModel extends ChangeNotifier {
   final ApiService _api = ApiService();
@@ -25,15 +25,17 @@ class CharacterViewModel extends ChangeNotifier {
   List<CharacterSummary> filtered   = [];
 
   CharacterDetail? selectedDetail;
-  String          errorMessage     = '';
 
-  /// Carga **todos** los personajes de la serie seleccionada.
-  /// Si `animeId == 0`, carga de Naruto, One Piece y DBZ.
+  // Get Characters from serie 
   Future<void> loadSeries(int animeId) async {
     loading = true;
     notifyListeners();
 
     try {
+      if (!await hasConnection()) {
+        throw Exception('No hay conexión a Internet');
+      }
+
       selectedSeriesId = animeId;
       characters.clear();
 
@@ -43,17 +45,17 @@ class CharacterViewModel extends ChangeNotifier {
         characters.addAll(list);
       }
 
-      // Inicialmente mostramos todos
-      filtered = characters;
+      // Aplicar filtro inicial ALL
+      filtered = List.from(characters);
     } catch (e) {
-      errorMessage = e.toString();
+      rethrow;
     } finally {
       loading = false;
       notifyListeners();
     }
   }
 
-  /// Filtra localmente por nombre.
+  // Filter by name
   void searchByName(String term) {
     _searchTerm = term.toLowerCase();
     filtered = characters
@@ -62,15 +64,18 @@ class CharacterViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Carga detalle de un personaje.
+  // Character details
   Future<void> loadDetail(int charId) async {
     loadingDetail = true;
     notifyListeners();
 
     try {
+      if (!await hasConnection()) {
+        throw Exception('No hay conexión a Internet');
+      }
       selectedDetail = await _api.fetchCharacterDetail(charId);
     } catch (e) {
-      errorMessage = e.toString();
+      rethrow;
     } finally {
       loadingDetail = false;
       notifyListeners();
@@ -80,7 +85,7 @@ class CharacterViewModel extends ChangeNotifier {
   /// Helper para el dropdown.
   Future<void> selectSeries(int animeId) => loadSeries(animeId);
 
-  /// Título actual de la serie seleccionada.
+  /// Título de la serie seleccionada.
   String get seriesTitle =>
       seriesList.firstWhere((s) => s.id == selectedSeriesId).name;
 }
