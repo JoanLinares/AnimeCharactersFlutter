@@ -50,39 +50,50 @@ class _CharactersViewState extends State<CharactersView> {
             ),
           ),
 
-          // Grid or loading
+          // Grid, “no results” o loading
           Expanded(
             child: LoadingIndicator(
               loading: vm.loading,
-              child: GridView.builder(
-                padding: const EdgeInsets.all(8),
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  childAspectRatio: 0.7,
-                ),
-                itemCount: vm.filtered.length,
-                itemBuilder: (_, i) {
-                  final ch = vm.filtered[i];
-                  return CharacterCard(
-                    character: ch,
-                    onTap: () async {
-                      await vm.loadDetail(ch.id)
-                        .catchError((e) => showError(context, e.toString()));
-                      if (mounted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => CharacterDetailsView(characterId: ch.id.toString()),
-                          ),
+              child: vm.filtered.isEmpty
+                  // Si no hay personajes tras filtrar...
+                  ? const Center(
+                      child: Text(
+                        'No found characters',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    )
+                  // Si hay resultados, mostramos el Grid
+                  : GridView.builder(
+                      padding: const EdgeInsets.all(8),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                        childAspectRatio: 0.7,
+                      ),
+                      itemCount: vm.filtered.length,
+                      itemBuilder: (_, i) {
+                        final ch = vm.filtered[i];
+                        return CharacterCard(
+                          character: ch,
+                          onTap: () async {
+                            await vm.loadDetail(ch.id)
+                              .catchError((e) => showError(context, e.toString()));
+                            if (mounted) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => CharacterDetailsView(
+                                    characterId: ch.id.toString(),
+                                  ),
+                                ),
+                              );
+                            }
+                          },
                         );
-                      }
-                    },
-                  );
-                },
-              ),
+                      },
+                    ),
             ),
           ),
         ],
