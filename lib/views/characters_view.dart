@@ -19,9 +19,12 @@ class _CharactersViewState extends State<CharactersView> {
   @override
   void initState() {
     super.initState();
-    final vm = context.read<CharacterViewModel>();
-    vm.loadSeries(vm.selectedSeriesId)
-      .catchError((e) => showError(context, e.toString()));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = context.read<CharacterViewModel>();
+      vm.loadSeries(vm.selectedSeriesId).catchError(
+        (e) => showError(context, e.toString()),
+      );
+    });
   }
 
   @override
@@ -34,10 +37,8 @@ class _CharactersViewState extends State<CharactersView> {
       ),
       body: Column(
         children: [
-          // Searcher
           custom_widgets.SearchBar(onChanged: vm.searchByName),
 
-          // Series selector
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: SeriesFilterDropdown(
@@ -50,19 +51,16 @@ class _CharactersViewState extends State<CharactersView> {
             ),
           ),
 
-          // Grid, “no results” o loading
           Expanded(
             child: LoadingIndicator(
               loading: vm.loading,
               child: vm.filtered.isEmpty
-                  // Si no hay personajes tras filtrar...
                   ? const Center(
                       child: Text(
-                        'No found characters',
+                        'No characters found',
                         style: TextStyle(fontSize: 16),
                       ),
                     )
-                  // Si hay resultados, mostramos el Grid
                   : GridView.builder(
                       padding: const EdgeInsets.all(8),
                       gridDelegate:
@@ -78,8 +76,10 @@ class _CharactersViewState extends State<CharactersView> {
                         return CharacterCard(
                           character: ch,
                           onTap: () async {
-                            await vm.loadDetail(ch.id)
-                              .catchError((e) => showError(context, e.toString()));
+                            await vm.loadDetail(ch.id).catchError(
+                              (e) => showError(context, e.toString()),
+                            );
+
                             if (mounted) {
                               Navigator.push(
                                 context,
